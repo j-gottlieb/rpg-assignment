@@ -9,6 +9,8 @@ import { HelloWorldService } from './hello-world/hello-world.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { TestModule } from './test/test.module';
+import { UserModule } from './user/user.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -32,6 +34,8 @@ import { TestModule } from './test/test.module';
       autoSchemaFile: join(process.cwd(), 'src/schema.gql'),
     }),
     TestModule,
+    UserModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService, HelloWorldResolver, HelloWorldService],
