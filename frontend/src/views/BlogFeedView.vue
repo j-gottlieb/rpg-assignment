@@ -62,9 +62,9 @@ const posts = computed<Post[]>(() => result.value?.posts ?? [])
 const newPostIds = ref<Set<number>>(new Set())
 const seenIds = ref<Set<number>>(new Set())
 
-// On initial load, mark all existing posts as already seen
 watch(posts, (current, previous) => {
-  if (!previous || previous.length === 0) {
+  // If seenIds is empty this is the first real data load — mark all as seen, no highlight
+  if (seenIds.value.size === 0 || !previous || previous.length === 0) {
     current.forEach((p) => seenIds.value.add(p.id))
     return
   }
@@ -78,7 +78,7 @@ watch(posts, (current, previous) => {
       }, 3000)
     }
   })
-})
+}, { immediate: true })
 
 // subscribeToMore writes directly into the Apollo cache so posts
 // persist across navigation without a separate local ref
