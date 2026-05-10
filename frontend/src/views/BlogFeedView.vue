@@ -9,7 +9,12 @@
     <div v-else-if="error" class="state error">Failed to load posts.</div>
     <div v-else-if="!posts.length" class="state">No posts yet. Be the first!</div>
 
-    <article v-for="post in posts" :key="post.id" class="post-card">
+    <article
+      v-for="post in posts"
+      :key="post.id"
+      class="post-card"
+      :class="{ 'post-card--new': newPostIds.has(post.id) }"
+    >
       <div class="post-meta">
         <span class="author">{{ post.author.username }}</span>
         <span class="date">{{ formatDate(post.createdAt) }}</span>
@@ -21,9 +26,9 @@
 </template>
 
 <script setup lang="ts">
-import { useQuery } from '@vue/apollo-composable'
+import { useQuery, useSubscription } from '@vue/apollo-composable'
 import { gql } from '@apollo/client/core'
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 
 const POSTS_QUERY = gql`
   query Posts {
@@ -32,16 +37,56 @@ const POSTS_QUERY = gql`
       title
       content
       createdAt
-      author {
-        id
-        username
-      }
+      author { id username }
     }
   }
 `
 
+const POST_CREATED_SUBSCRIPTION = gql`
+  subscription PostCreated {
+    postCreated {
+      id
+      title
+      content
+      createdAt
+      author { id username }
+    }
+  }
+`
+
+interface Post {
+  id: number
+  title: string
+  content: string
+  createdAt: string
+  author: { id: number; username: string }
+}
+
 const { result, loading, error } = useQuery(POSTS_QUERY)
-const posts = computed(() => result.value?.posts ?? [])
+const posts = ref<Post[]>([])
+const newPostIds = ref<Set<number>>(new Set())
+
+// Populate posts once query loads
+const queryPosts = computed(() => result.value?.posts ?? [])
+import { watch } from 'vue'
+watch(queryPosts, (val) => { posts.value = val }, { immediate: true })
+
+useSubscription(POST_CREATED_SUBSCRIPTION, undefined, {
+  fetchPolicy: 'no-cache',
+}).onResult(({ data }) => {
+  if (!data?.postCreated) return
+  const newPost: Post = data.postCreated
+
+  // Avoid duplicates (own posts already added optimistically by apollo)
+  if (posts.value.some((p) => p.id === newPost.id)) return
+
+  posts.value = [newPost, ...posts.value]
+  newPostIds.value = new Set([...newPostIds.value, newPost.id])
+
+  setTimeout(() => {
+    newPostIds.value = new Set([...newPostIds.value].filter((id) => id !== newPost.id))
+  }, 3000)
+})
 
 function formatDate(iso: string) {
   const formatOptions = Intl.DateTimeFormat().resolvedOptions()
@@ -61,9 +106,7 @@ function formatDate(iso: string) {
   align-items: center;
   margin-bottom: 1.5rem;
 }
-h1 {
-  font-size: 1.75rem;
-}
+h1 { font-size: 1.75rem; }
 .new-post-btn {
   padding: 0.4rem 1rem;
   background: #42b883;
@@ -77,14 +120,19 @@ h1 {
   padding: 3rem 0;
   color: #888;
 }
-.state.error {
-  color: #e53e3e;
-}
+.state.error { color: #e53e3e; }
 .post-card {
   border: 1px solid var(--color-border);
   border-radius: 8px;
   padding: 1.25rem 1.5rem;
   margin-bottom: 1rem;
+  background-color: transparent;
+  transition: background-color 3s ease;
+}
+.post-card--new {
+  background-color: #f0fdf4;
+  border-color: #42b883;
+  transition: none;
 }
 .post-meta {
   display: flex;
@@ -93,16 +141,7 @@ h1 {
   color: #888;
   margin-bottom: 0.5rem;
 }
-.author {
-  font-weight: 600;
-  color: #42b883;
-}
-h2 {
-  font-size: 1.2rem;
-  margin-bottom: 0.5rem;
-}
-p {
-  line-height: 1.6;
-  white-space: pre-wrap;
-}
+.author { font-weight: 600; color: #42b883; }
+h2 { font-size: 1.2rem; margin-bottom: 0.5rem; }
+p { line-height: 1.6; white-space: pre-wrap; }
 </style>

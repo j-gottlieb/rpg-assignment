@@ -1,4 +1,4 @@
-import { Resolver, Query, Mutation, Args } from '@nestjs/graphql';
+import { Resolver, Query, Mutation, Args, Subscription } from '@nestjs/graphql';
 import { UseGuards } from '@nestjs/common';
 import { PostService } from './post.service';
 import { Post } from './post.entity';
@@ -6,6 +6,7 @@ import { CreatePostInput } from './dto/create-post.input';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { User } from '../user/user.entity';
+import { pubSub, POST_CREATED } from '../pubsub';
 
 @Resolver(() => Post)
 export class PostResolver {
@@ -23,5 +24,10 @@ export class PostResolver {
     @CurrentUser() user: User,
   ): Promise<Post> {
     return this.postService.create(input, user);
+  }
+
+  @Subscription(() => Post)
+  postCreated() {
+    return pubSub.asyncIterableIterator(POST_CREATED);
   }
 }

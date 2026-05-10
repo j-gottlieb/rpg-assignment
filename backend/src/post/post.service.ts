@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { Post } from './post.entity';
 import { User } from '../user/user.entity';
 import { CreatePostInput } from './dto/create-post.input';
+import { pubSub, POST_CREATED } from '../pubsub';
 
 @Injectable()
 export class PostService {
@@ -16,7 +17,9 @@ export class PostService {
     return this.postRepo.find({ order: { createdAt: 'DESC' } });
   }
 
-  create(input: CreatePostInput, author: User): Promise<Post> {
-    return this.postRepo.save(this.postRepo.create({ ...input, author }));
+  async create(input: CreatePostInput, author: User): Promise<Post> {
+    const post = await this.postRepo.save(this.postRepo.create({ ...input, author }));
+    pubSub.publish(POST_CREATED, { postCreated: post });
+    return post;
   }
 }
