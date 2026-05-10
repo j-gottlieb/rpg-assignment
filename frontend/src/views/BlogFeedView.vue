@@ -49,7 +49,7 @@ function formatDate(iso: string) {
 
 <style scoped>
 .feed {
-  max-width: 680px;
+  max-width: 720px;
   margin: 2rem auto;
   padding: 0 1rem;
 }

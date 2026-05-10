@@ -57,8 +57,9 @@ async function submit() {
 .auth-page {
   display: flex;
   justify-content: center;
-  align-items: center;
-  min-height: 80vh;
+  align-items: flex-start;
+  padding-top: 4rem;
+  min-height: 60vh;
 }
 .auth-card {
   width: 100%;

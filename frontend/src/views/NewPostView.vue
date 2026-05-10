@@ -59,7 +59,7 @@ async function submit() {
 
 <style scoped>
 .new-post {
-  max-width: 680px;
+  max-width: 720px;
   margin: 2rem auto;
   padding: 0 1rem;
 }
