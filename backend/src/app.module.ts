@@ -28,6 +28,7 @@ import { PostModule } from './post/post.module';
         database: config.get<string>('DB_NAME'),
         entities: [__dirname + '/**/*.entity{.ts,.js}'],
         synchronize: true,
+        timezone: 'Z',
       }),
     }),
     GraphQLModule.forRoot<ApolloDriverConfig>({
