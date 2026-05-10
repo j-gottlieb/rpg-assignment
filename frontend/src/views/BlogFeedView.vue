@@ -44,8 +44,8 @@ const { result, loading, error } = useQuery(POSTS_QUERY)
 const posts = computed(() => result.value?.posts ?? [])
 
 function formatDate(iso: string) {
-  const utc = iso.endsWith('Z') ? iso : iso + 'Z'
-  return new Date(utc).toLocaleString()
+  const formatOptions = Intl.DateTimeFormat().resolvedOptions()
+  return new Date(iso).toLocaleString(formatOptions.locale, { timeZone: formatOptions.timeZone })
 }
 </script>
 
