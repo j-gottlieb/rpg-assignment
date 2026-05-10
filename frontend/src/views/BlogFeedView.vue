@@ -26,17 +26,14 @@
 </template>
 
 <script setup lang="ts">
-import { useQuery, useSubscription } from '@vue/apollo-composable'
+import { useQuery } from '@vue/apollo-composable'
 import { gql } from '@apollo/client/core'
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 const POSTS_QUERY = gql`
   query Posts {
     posts {
-      id
-      title
-      content
-      createdAt
+      id title content createdAt
       author { id username }
     }
   }
@@ -45,10 +42,7 @@ const POSTS_QUERY = gql`
 const POST_CREATED_SUBSCRIPTION = gql`
   subscription PostCreated {
     postCreated {
-      id
-      title
-      content
-      createdAt
+      id title content createdAt
       author { id username }
     }
   }
@@ -62,30 +56,40 @@ interface Post {
   author: { id: number; username: string }
 }
 
-const { result, loading, error } = useQuery(POSTS_QUERY)
-const posts = ref<Post[]>([])
+const { result, loading, error, subscribeToMore } = useQuery(POSTS_QUERY)
+const posts = computed<Post[]>(() => result.value?.posts ?? [])
+
 const newPostIds = ref<Set<number>>(new Set())
+const seenIds = ref<Set<number>>(new Set())
 
-// Populate posts once query loads
-const queryPosts = computed(() => result.value?.posts ?? [])
-import { watch } from 'vue'
-watch(queryPosts, (val) => { posts.value = val }, { immediate: true })
+// On initial load, mark all existing posts as already seen
+watch(posts, (current, previous) => {
+  if (!previous || previous.length === 0) {
+    current.forEach((p) => seenIds.value.add(p.id))
+    return
+  }
+  // Any post not yet seen arrived via subscription — highlight it
+  current.forEach((p) => {
+    if (!seenIds.value.has(p.id)) {
+      seenIds.value.add(p.id)
+      newPostIds.value = new Set([...newPostIds.value, p.id])
+      setTimeout(() => {
+        newPostIds.value = new Set([...newPostIds.value].filter((id) => id !== p.id))
+      }, 3000)
+    }
+  })
+})
 
-useSubscription(POST_CREATED_SUBSCRIPTION, undefined, {
-  fetchPolicy: 'no-cache',
-}).onResult(({ data }) => {
-  if (!data?.postCreated) return
-  const newPost: Post = data.postCreated
-
-  // Avoid duplicates (own posts already added optimistically by apollo)
-  if (posts.value.some((p) => p.id === newPost.id)) return
-
-  posts.value = [newPost, ...posts.value]
-  newPostIds.value = new Set([...newPostIds.value, newPost.id])
-
-  setTimeout(() => {
-    newPostIds.value = new Set([...newPostIds.value].filter((id) => id !== newPost.id))
-  }, 3000)
+// subscribeToMore writes directly into the Apollo cache so posts
+// persist across navigation without a separate local ref
+subscribeToMore({
+  document: POST_CREATED_SUBSCRIPTION,
+  updateQuery: (prev, { subscriptionData }) => {
+    const newPost = subscriptionData?.data?.postCreated
+    if (!newPost) return prev
+    if (prev.posts.some((p: Post) => p.id === newPost.id)) return prev
+    return { posts: [newPost, ...prev.posts] }
+  },
 })
 
 function formatDate(iso: string) {
