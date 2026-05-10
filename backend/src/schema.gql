@@ -29,36 +29,17 @@ type AuthPayload {
   user: User!
 }
 
-<<<<<<< Updated upstream
-type Post {
-  id: Int!
-  title: String!
-  content: String!
-  author: User!
-  createdAt: DateTime!
-}
-
-=======
->>>>>>> Stashed changes
 type Query {
   sayHello: HelloWorldModel!
   tests: [Test!]!
   test(id: Int!): Test
   me: User!
-<<<<<<< Updated upstream
-  posts: [Post!]!
-=======
->>>>>>> Stashed changes
 }
 
 type Mutation {
   createTest(name: String!): Test!
   register(input: RegisterInput!): AuthPayload!
   login(input: LoginInput!): AuthPayload!
-<<<<<<< Updated upstream
-  createPost(input: CreatePostInput!): Post!
-=======
->>>>>>> Stashed changes
 }
 
 input RegisterInput {
@@ -70,12 +51,4 @@ input RegisterInput {
 input LoginInput {
   email: String!
   password: String!
-<<<<<<< Updated upstream
-}
-
-input CreatePostInput {
-  title: String!
-  content: String!
-=======
->>>>>>> Stashed changes
 }
