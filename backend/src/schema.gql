@@ -6,6 +6,49 @@ type HelloWorldModel {
   value: String!
 }
 
+type Test {
+  id: Int!
+  name: String!
+}
+
+type User {
+  id: Int!
+  username: String!
+  email: String!
+  createdAt: DateTime!
+  password: String!
+}
+
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
+type AuthPayload {
+  token: String!
+  user: User!
+}
+
 type Query {
   sayHello: HelloWorldModel!
+  tests: [Test!]!
+  test(id: Int!): Test
+  me: User!
+}
+
+type Mutation {
+  createTest(name: String!): Test!
+  register(input: RegisterInput!): AuthPayload!
+  login(input: LoginInput!): AuthPayload!
+}
+
+input RegisterInput {
+  username: String!
+  email: String!
+  password: String!
+}
+
+input LoginInput {
+  email: String!
+  password: String!
 }
