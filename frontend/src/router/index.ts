@@ -7,7 +7,13 @@ const router = createRouter({
     {
       path: '/',
       name: 'home',
-      component: HomeView,
+      component: () => import('../views/BlogFeedView.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/posts/new',
+      name: 'new-post',
+      component: () => import('../views/NewPostView.vue'),
       meta: { requiresAuth: true },
     },
     {
