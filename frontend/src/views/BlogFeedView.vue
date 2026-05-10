@@ -32,7 +32,10 @@ const POSTS_QUERY = gql`
       title
       content
       createdAt
-      author { id username }
+      author {
+        id
+        username
+      }
     }
   }
 `
@@ -41,9 +44,8 @@ const { result, loading, error } = useQuery(POSTS_QUERY)
 const posts = computed(() => result.value?.posts ?? [])
 
 function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString(undefined, {
-    year: 'numeric', month: 'short', day: 'numeric',
-  })
+  const utc = iso.endsWith('Z') ? iso : iso + 'Z'
+  return new Date(utc).toLocaleString()
 }
 </script>
 
@@ -59,7 +61,9 @@ function formatDate(iso: string) {
   align-items: center;
   margin-bottom: 1.5rem;
 }
-h1 { font-size: 1.75rem; }
+h1 {
+  font-size: 1.75rem;
+}
 .new-post-btn {
   padding: 0.4rem 1rem;
   background: #42b883;
@@ -73,7 +77,9 @@ h1 { font-size: 1.75rem; }
   padding: 3rem 0;
   color: #888;
 }
-.state.error { color: #e53e3e; }
+.state.error {
+  color: #e53e3e;
+}
 .post-card {
   border: 1px solid var(--color-border);
   border-radius: 8px;
@@ -87,7 +93,16 @@ h1 { font-size: 1.75rem; }
   color: #888;
   margin-bottom: 0.5rem;
 }
-.author { font-weight: 600; color: #42b883; }
-h2 { font-size: 1.2rem; margin-bottom: 0.5rem; }
-p { line-height: 1.6; white-space: pre-wrap; }
+.author {
+  font-weight: 600;
+  color: #42b883;
+}
+h2 {
+  font-size: 1.2rem;
+  margin-bottom: 0.5rem;
+}
+p {
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
 </style>
