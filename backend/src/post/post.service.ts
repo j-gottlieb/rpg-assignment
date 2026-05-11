@@ -18,8 +18,10 @@ export class PostService {
   }
 
   async create(input: CreatePostInput, author: User): Promise<Post> {
-    const post = await this.postRepo.save(this.postRepo.create({ ...input, author }));
-    pubSub.publish(POST_CREATED, { postCreated: post });
+    const post = await this.postRepo.save(
+      this.postRepo.create({ ...input, author }),
+    );
+    await pubSub.publish(POST_CREATED, { postCreated: post });
     return post;
   }
 }

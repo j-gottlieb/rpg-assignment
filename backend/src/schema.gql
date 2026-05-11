@@ -29,17 +29,27 @@ type AuthPayload {
   user: User!
 }
 
+type Post {
+  id: Int!
+  title: String!
+  content: String!
+  author: User!
+  createdAt: DateTime!
+}
+
 type Query {
   sayHello: HelloWorldModel!
   tests: [Test!]!
   test(id: Int!): Test
   me: User!
+  posts: [Post!]!
 }
 
 type Mutation {
   createTest(name: String!): Test!
   register(input: RegisterInput!): AuthPayload!
   login(input: LoginInput!): AuthPayload!
+  createPost(input: CreatePostInput!): Post!
 }
 
 input RegisterInput {
@@ -51,4 +61,13 @@ input RegisterInput {
 input LoginInput {
   email: String!
   password: String!
+}
+
+input CreatePostInput {
+  title: String!
+  content: String!
+}
+
+type Subscription {
+  postCreated: Post!
 }
