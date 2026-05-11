@@ -7,6 +7,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { User } from '../user/user.entity';
 import { pubSub, POST_CREATED } from '../pubsub';
+import { PubSubAsyncIterableIterator } from 'graphql-subscriptions/dist/pubsub-async-iterable-iterator';
 
 @Resolver(() => Post)
 export class PostResolver {
@@ -27,7 +28,7 @@ export class PostResolver {
   }
 
   @Subscription(() => Post)
-  postCreated() {
+  postCreated(): PubSubAsyncIterableIterator<Post> {
     return pubSub.asyncIterableIterator(POST_CREATED);
   }
 }
