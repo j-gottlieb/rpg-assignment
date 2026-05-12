@@ -27,6 +27,15 @@ import { useRouter } from 'vue-router'
 import { useMutation } from '@vue/apollo-composable'
 import { gql } from '@apollo/client/core'
 
+const POSTS_QUERY = gql`
+  query Posts {
+    posts {
+      id title content createdAt
+      author { id username }
+    }
+  }
+`
+
 const CREATE_POST = gql`
   mutation CreatePost($input: CreatePostInput!) {
     createPost(input: $input) {
@@ -39,12 +48,32 @@ const CREATE_POST = gql`
   }
 `
 
+interface Post {
+  id: number
+  title: string
+  content: string
+  createdAt: string
+  author: { id: number; username: string }
+}
+
 const router = useRouter()
 const title = ref('')
 const content = ref('')
 const error = ref('')
 
-const { mutate, loading } = useMutation(CREATE_POST)
+const { mutate, loading } = useMutation(CREATE_POST, {
+  // refetchQueries: [POSTS_QUERY],
+  update(cache, { data }) {
+    const newPost = data?.createPost
+    if (!newPost) return
+    const existing = cache.readQuery<{ posts: Post[] }>({ query: POSTS_QUERY })
+    if (!existing) return
+    cache.writeQuery({
+      query: POSTS_QUERY,
+      data: { posts: [newPost, ...existing.posts] },
+    })
+  },
+})
 
 async function submit() {
   error.value = ''
