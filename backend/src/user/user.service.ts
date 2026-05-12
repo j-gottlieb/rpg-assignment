@@ -22,7 +22,11 @@ export class UserService {
     return this.userRepo.findOneBy({ username });
   }
 
-  create(data: { username: string; email: string; password: string }): Promise<User> {
+  create(data: {
+    username: string;
+    email: string;
+    password: string;
+  }): Promise<User> {
     return this.userRepo.save(this.userRepo.create(data));
   }
 }

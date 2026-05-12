@@ -4,11 +4,8 @@ import { AppService } from './app.service';
 import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { join } from 'path';
-import { HelloWorldResolver } from './hello-world/hello-world.resolver';
-import { HelloWorldService } from './hello-world/hello-world.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { TestModule } from './test/test.module';
 import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
 import { PostModule } from './post/post.module';
@@ -38,12 +35,11 @@ import { PostModule } from './post/post.module';
         'graphql-ws': true,
       },
     }),
-    TestModule,
     UserModule,
     AuthModule,
     PostModule,
   ],
   controllers: [AppController],
-  providers: [AppService, HelloWorldResolver, HelloWorldService],
+  providers: [AppService],
 })
 export class AppModule {}
