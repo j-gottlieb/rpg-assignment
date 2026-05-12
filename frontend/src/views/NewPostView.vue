@@ -26,6 +26,7 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useMutation } from '@vue/apollo-composable'
 import { gql } from '@apollo/client/core'
+import { type Post } from '../stores/posts.ts'
 
 const POSTS_QUERY = gql`
   query Posts {
@@ -47,14 +48,6 @@ const CREATE_POST = gql`
     }
   }
 `
-
-interface Post {
-  id: number
-  title: string
-  content: string
-  createdAt: string
-  author: { id: number; username: string }
-}
 
 const router = useRouter()
 const title = ref('')
@@ -79,7 +72,7 @@ async function submit() {
   error.value = ''
   try {
     await mutate({ input: { title: title.value, content: content.value } })
-    router.push('/')
+    await router.push('/')
   } catch (e: unknown) {
     error.value = (e as Error).message ?? 'Failed to publish post'
   }

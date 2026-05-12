@@ -29,12 +29,19 @@
 import { useQuery } from '@vue/apollo-composable'
 import { gql } from '@apollo/client/core'
 import { computed, ref, watch } from 'vue'
+import { useSeenPosts, type Post } from '../stores/posts'
 
 const POSTS_QUERY = gql`
   query Posts {
     posts {
-      id title content createdAt
-      author { id username }
+      id
+      title
+      content
+      createdAt
+      author {
+        id
+        username
+      }
     }
   }
 `
@@ -42,43 +49,39 @@ const POSTS_QUERY = gql`
 const POST_CREATED_SUBSCRIPTION = gql`
   subscription PostCreated {
     postCreated {
-      id title content createdAt
-      author { id username }
+      id
+      title
+      content
+      createdAt
+      author {
+        id
+        username
+      }
     }
   }
 `
 
-interface Post {
-  id: number
-  title: string
-  content: string
-  createdAt: string
-  author: { id: number; username: string }
-}
-
 const { result, loading, error, subscribeToMore } = useQuery(POSTS_QUERY)
+const { seenIds, addSeenId } = useSeenPosts()
+const newPostIds = ref<Set<number>>(new Set<number>())
 const posts = computed<Post[]>(() => result.value?.posts ?? [])
 
-const newPostIds = ref<Set<number>>(new Set())
-const seenIds = ref<Set<number>>(new Set())
-
-watch(posts, (current, previous) => {
-  // If seenIds is empty this is the first real data load — mark all as seen, no highlight
-  if (seenIds.value.size === 0 || !previous || previous.length === 0) {
-    current.forEach((p) => seenIds.value.add(p.id))
-    return
-  }
-  // Any post not yet seen arrived via subscription — highlight it
-  current.forEach((p) => {
-    if (!seenIds.value.has(p.id)) {
-      seenIds.value.add(p.id)
-      newPostIds.value = new Set([...newPostIds.value, p.id])
-      setTimeout(() => {
-        newPostIds.value = new Set([...newPostIds.value].filter((id) => id !== p.id))
-      }, 3000)
-    }
-  })
-}, { immediate: true })
+watch(
+  posts,
+  (current) => {
+    // Any post not yet seen arrived via subscription — highlight if from another user
+    current.forEach((p) => {
+      if (!seenIds.has(p.id)) {
+        addSeenId(p.id)
+        newPostIds.value = new Set([...newPostIds.value, p.id])
+        setTimeout(() => {
+          newPostIds.value = new Set([...newPostIds.value].filter((id) => id !== p.id))
+        }, 3000)
+      }
+    })
+  },
+  { immediate: true },
+)
 
 // subscribeToMore writes directly into the Apollo cache so posts
 // persist across navigation without a separate local ref
@@ -110,7 +113,9 @@ function formatDate(iso: string) {
   align-items: center;
   margin-bottom: 1.5rem;
 }
-h1 { font-size: 1.75rem; }
+h1 {
+  font-size: 1.75rem;
+}
 .new-post-btn {
   padding: 0.4rem 1rem;
   background: #42b883;
@@ -124,7 +129,9 @@ h1 { font-size: 1.75rem; }
   padding: 3rem 0;
   color: #888;
 }
-.state.error { color: #e53e3e; }
+.state.error {
+  color: #e53e3e;
+}
 .post-card {
   border: 1px solid var(--color-border);
   border-radius: 8px;
@@ -145,7 +152,16 @@ h1 { font-size: 1.75rem; }
   color: #888;
   margin-bottom: 0.5rem;
 }
-.author { font-weight: 600; color: #42b883; }
-h2 { font-size: 1.2rem; margin-bottom: 0.5rem; }
-p { line-height: 1.6; white-space: pre-wrap; }
+.author {
+  font-weight: 600;
+  color: #42b883;
+}
+h2 {
+  font-size: 1.2rem;
+  margin-bottom: 0.5rem;
+}
+p {
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
 </style>
